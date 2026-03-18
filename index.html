@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NP Paid Ads Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f8fa;
+    --surface: #ffffff;
+    --surface-2: #f9fafb;
+    --border: #e3e6ea;
+    --text: #1a1f2e;
+    --text-secondary: #5c6370;
+    --text-muted: #9ba3af;
+    --purple: #7b68ee;
+    --purple-light: #ede9fd;
+    --green: #0fb66f;
+    --green-light: #e6f7f1;
+    --red: #f4364c;
+    --red-light: #feeaec;
+    --amber: #f59e0b;
+    --amber-light: #fef3c7;
+    --blue: #4361ee;
+    --teal: #06b6d4;
+    --font: 'Inter', -apple-system, sans-serif;
+    --radius: 8px;
+    --radius-sm: 5px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  }
+  [data-theme="dark"] {
+    --bg: #1a1d23;
+    --surface: #22262e;
+    --surface-2: #1e222a;
+    --border: #2e3340;
+    --text: #e8eaed;
+    --text-secondary: #9ba3af;
+    --text-muted: #5c6370;
+    --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font); font-size:13px; line-height:1.5; transition:background .2s,color .2s; }
+  .theme-toggle { display:flex; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:2px; gap:2px; }
+  .theme-btn { width:28px; height:28px; border:none; background:transparent; color:var(--text-muted); cursor:pointer; border-radius:4px; transition:all .15s; display:flex; align-items:center; justify-content:center; font-size:13px; }
+  .theme-btn.active { background:var(--surface); color:var(--text); box-shadow:var(--shadow); }
+  .theme-btn:hover:not(.active) { color:var(--text); background:rgba(128,128,128,.1); }
+
+  /* HEADER */
+  .header { background:var(--surface); border-bottom:1px solid var(--border); padding:12px 24px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10; }
+  .header-left { display:flex; align-items:center; gap:10px; }
+  .logo-dot { width:8px; height:8px; border-radius:50%; background:var(--purple); animation:breathe 3s ease-in-out infinite; }
+  @keyframes breathe { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .header-title { font-weight:600; font-size:14px; }
+  .header-title span { color:var(--purple); }
+  .hdivider { width:1px; height:18px; background:var(--border); }
+  .header-meta { font-size:12px; color:var(--text-secondary); }
+  .header-right { display:flex; align-items:center; gap:8px; }
+  .period-tabs { display:flex; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:2px; gap:2px; }
+  .tab { padding:5px 14px; font-family:var(--font); font-size:12px; font-weight:500; border:none; background:transparent; color:var(--text-secondary); cursor:pointer; border-radius:4px; transition:all .15s; }
+  .tab.active { background:var(--surface); color:var(--text); box-shadow:var(--shadow); }
+  .tab:hover:not(.active) { color:var(--text); background:rgba(0,0,0,.03); }
+  .refresh-btn { padding:6px 12px; font-family:var(--font); font-size:12px; font-weight:500; border:1px solid var(--border); background:var(--surface); color:var(--text-secondary); border-radius:var(--radius-sm); cursor:pointer; transition:all .15s; }
+  .refresh-btn:hover { background:var(--bg); color:var(--text); }
+
+  /* MAIN */
+  .main { padding:20px 24px; display:flex; flex-direction:column; gap:16px; }
+
+  /* NOTICE */
+  .data-notice { background:var(--amber-light); border:1px solid #fcd34d; border-radius:var(--radius-sm); padding:9px 14px; font-size:12px; color:#92400e; display:flex; align-items:center; gap:7px; }
+
+  /* SECTION LABEL */
+  .section-label { font-size:11px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; }
+  .section-badge { font-size:10px; font-weight:500; color:var(--text-muted); text-transform:none; letter-spacing:0; }
+
+  /* SNAPSHOT */
+  .snapshot-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:10px; }
+  .snap-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 14px 12px; box-shadow:var(--shadow); transition:box-shadow .15s; }
+  .snap-card:hover { box-shadow:var(--shadow-md); }
+  .snap-label { font-size:10px; font-weight:600; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:.05em; }
+  .snap-value { font-size:22px; font-weight:700; letter-spacing:-.03em; line-height:1; margin-bottom:6px; }
+  .snap-wow { font-size:11px; font-weight:600; display:flex; align-items:center; gap:3px; }
+  .up { color:var(--green); } .down { color:var(--red); } .neutral { color:var(--text-muted); }
+  .snap-prev { font-size:10px; color:var(--text-muted); margin-top:2px; }
+
+  /* FUNNEL */
+  .funnel-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+  .funnel-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow); position:relative; overflow:hidden; }
+  .funnel-bar { position:absolute; bottom:0; left:0; height:3px; background:var(--purple); opacity:.5; border-radius:0 2px 0 0; }
+  .funnel-name { font-size:10px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px; }
+  .funnel-volume { font-size:20px; font-weight:700; letter-spacing:-.02em; margin-bottom:3px; }
+  .funnel-cost { font-size:11px; color:var(--text-secondary); margin-bottom:6px; }
+  .funnel-cvr { display:inline-flex; align-items:center; font-size:11px; font-weight:600; color:var(--purple); background:var(--purple-light); padding:2px 8px; border-radius:100px; }
+
+  /* LAYOUT */
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+  .table-head { display:grid; padding:9px 14px; background:var(--surface-2); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; }
+  .table-row { display:grid; padding:11px 14px; border-bottom:1px solid var(--border); font-size:13px; align-items:center; transition:background .1s; }
+  .table-row:last-child { border-bottom:none; }
+  .table-row:hover { background:var(--surface-2); }
+  .row-name { font-weight:500; display:flex; align-items:center; gap:7px; }
+  .campaign-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .dot-prospecting { background:var(--blue); }
+  .dot-retargeting { background:var(--purple); }
+  .dot-advantage { background:var(--teal); }
+  .row-val { color:var(--text-secondary); }
+  .roas-good { color:var(--green); font-weight:600; }
+  .roas-mid  { color:var(--amber); font-weight:600; }
+  .roas-bad  { color:var(--red);   font-weight:600; }
+  .pillar-tag { font-size:10px; font-weight:600; padding:2px 8px; border-radius:100px; letter-spacing:.03em; text-transform:uppercase; }
+  .pill-ugc         { background:#ede9fd; color:#5b21b6; }
+  .pill-founder     { background:#fef3c7; color:#92400e; }
+  .pill-product     { background:#d1fae5; color:#065f46; }
+  .pill-lifestyle   { background:#dbeafe; color:#1e40af; }
+  .pill-testimonial { background:#fce7f3; color:#9d174d; }
+  .pill-evergreen   { background:#ccfbf1; color:#134e4a; }
+  .fatigue-flag { font-size:9px; font-weight:600; background:var(--red-light); color:var(--red); border:1px solid #fca5a5; padding:1px 6px; border-radius:100px; }
+  .period-sep { border-left:1px solid var(--border); padding-left:10px; }
+
+  /* CREATIVES */
+  .creatives-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; }
+  .creative-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); transition:box-shadow .15s, transform .15s; position:relative; }
+  .creative-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
+  .creative-rank { position:absolute; top:7px; left:7px; width:20px; height:20px; background:rgba(0,0,0,.5); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:#fff; z-index:2; }
+  .creative-thumb { width:100%; aspect-ratio:4/5; background:linear-gradient(135deg,#f0f2f5,#e3e6ea); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px; color:var(--text-muted); font-size:10px; font-weight:500; }
+  .thumb-icon { width:32px; height:32px; background:var(--surface); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; box-shadow:var(--shadow); }
+  .creative-info { padding:10px; }
+  .creative-name { font-size:11px; font-weight:600; margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .creative-metrics { display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; }
+  .creative-metric { text-align:center; padding:5px 2px; background:var(--surface-2); border-radius:var(--radius-sm); border:1px solid var(--border); }
+  .cm-label { font-size:8px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:2px; }
+  .cm-value { font-size:12px; font-weight:700; letter-spacing:-.02em; }
+
+  /* RECOMMENDATIONS */
+  .reco-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .reco-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow); display:flex; gap:12px; align-items:flex-start; }
+  .reco-icon { width:30px; height:30px; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+  .reco-scale-up   { background:var(--green-light); }
+  .reco-scale-down { background:var(--red-light); }
+  .reco-fatigue    { background:var(--amber-light); }
+  .reco-test       { background:var(--purple-light); }
+  .reco-title { font-size:12px; font-weight:600; margin-bottom:3px; }
+  .reco-desc { font-size:11px; color:var(--text-secondary); line-height:1.5; }
+
+  /* CONTROL PANEL */
+  .control-panel { display:flex; align-items:center; gap:12px; }
+
+  .toggle-wrap { display:flex; align-items:center; gap:7px; }
+  .toggle-label { font-size:11px; font-weight:600; color:var(--text-secondary); }
+
+  .toggle { position:relative; width:36px; height:20px; }
+  .toggle input { opacity:0; width:0; height:0; }
+  .toggle-slider { position:absolute; inset:0; background:var(--border); border-radius:20px; cursor:pointer; transition:.2s; }
+  .toggle-slider:before { content:""; position:absolute; width:14px; height:14px; left:3px; bottom:3px; background:white; border-radius:50%; transition:.2s; }
+  .toggle input:checked + .toggle-slider { background:var(--green); }
+  .toggle input:checked + .toggle-slider:before { transform:translateX(16px); }
+
+  .control-select { padding:5px 10px; font-family:var(--font); font-size:12px; font-weight:500; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:var(--radius-sm); cursor:pointer; }
+  .control-select:focus { outline:none; border-color:var(--purple); }
+
+  .run-now-btn { padding:6px 12px; font-family:var(--font); font-size:12px; font-weight:600; border:none; background:var(--purple); color:white; border-radius:var(--radius-sm); cursor:pointer; transition:opacity .15s; }
+  .run-now-btn:hover { opacity:0.85; }
+  .run-now-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+  .status-dot { width:7px; height:7px; border-radius:50%; background:var(--green); animation:breathe 3s ease-in-out infinite; }
+  .status-dot.off { background:var(--text-muted); animation:none; }
+
+  /* FOOTER */
+  .footer { padding:12px 24px; border-top:1px solid var(--border); background:var(--surface); display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo-dot"></div>
+    <div class="header-title">Nobody's Princess <span>/ Paid Ads</span></div>
+    <div class="hdivider"></div>
+    <div class="header-meta" id="report-dates">11 Mar — 18 Mar 2026</div>
+  </div>
+  <div class="header-right">
+    <div class="control-panel">
+      <div class="toggle-wrap">
+        <div class="status-dot" id="status-dot"></div>
+        <span class="toggle-label" id="toggle-label">Reports ON</span>
+        <label class="toggle">
+          <input type="checkbox" id="enabled-toggle" checked onchange="updateSetting('enabled', this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div style="width:1px;height:18px;background:var(--border);"></div>
+      <select class="control-select" id="freq-select" onchange="updateSetting('frequencyDays', parseInt(this.value))" title="Report frequency">
+        <option value="1">Daily</option>
+        <option value="3">Every 3 days</option>
+        <option value="7" selected>Weekly</option>
+        <option value="14">Fortnightly</option>
+      </select>
+      <select class="control-select" id="time-select" onchange="updateSetting('timeHourAEST', parseInt(this.value))" title="Run time (AEST)">
+        <option value="6">6:00 AM</option>
+        <option value="7">7:00 AM</option>
+        <option value="8">8:00 AM</option>
+        <option value="9" selected>9:00 AM</option>
+        <option value="10">10:00 AM</option>
+        <option value="12">12:00 PM</option>
+      </select>
+      <button class="run-now-btn" id="run-now-btn" onclick="runNow()">▶ Run Now</button>
+    </div>
+    <div style="width:1px;height:18px;background:var(--border);"></div>
+    <div class="theme-toggle">
+      <button class="theme-btn active" id="btn-light" onclick="setTheme('light')" title="Light mode">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+      <button class="theme-btn" id="btn-system" onclick="setTheme('system')" title="System">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </button>
+      <button class="theme-btn" id="btn-dark" onclick="setTheme('dark')" title="Dark mode">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+    <div class="period-tabs">
+      <button class="tab active" onclick="switchPeriod(7,this)">7 Days</button>
+      <button class="tab" onclick="switchPeriod(14,this)">14 Days</button>
+      <button class="tab" onclick="switchPeriod(30,this)">30 Days</button>
+    </div>
+    <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="data-notice" id="data-notice">
+    ⚡ Sample data shown — connect your Make.com webhook to populate live Meta data.
+  </div>
+
+  <div>
+    <div class="section-label">Snapshot <span class="section-badge">vs prev period</span></div>
+    <div class="snapshot-grid" id="snapshot-grid"></div>
+  </div>
+
+  <div>
+    <div class="section-label">Funnel Performance <span class="section-badge">Volume · Cost · CVR</span></div>
+    <div class="funnel-grid" id="funnel-grid"></div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="section-label">Campaign Performance</div>
+      <div class="card">
+        <div class="table-head" style="grid-template-columns:2fr 1fr 1fr 1fr;">
+          <div>Campaign</div><div>Spend</div><div>Revenue</div><div>ROAS</div>
+        </div>
+        <div id="campaign-rows"></div>
+      </div>
+    </div>
+    <div>
+      <div class="section-label">Creative Pillars <span class="section-badge">7d · 14d · 30d ROAS</span></div>
+      <div class="card">
+        <div class="table-head" style="grid-template-columns:1.8fr 1fr 1fr 1fr;">
+          <div>Pillar</div>
+          <div class="period-sep">7d</div>
+          <div class="period-sep">14d</div>
+          <div class="period-sep">30d</div>
+        </div>
+        <div id="pillar-rows"></div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">Top 6 Creatives <span class="section-badge">Rolling · ranked by ROAS</span></div>
+    <div class="creatives-grid" id="creatives-grid"></div>
+  </div>
+
+  <div>
+    <div class="section-label">AI Recommendations</div>
+    <div class="reco-grid" id="reco-grid"></div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <div>NP Paid Ads Dashboard · Auto-generated via Make.com + Meta Marketing API</div>
+  <div id="last-updated">—</div>
+</div>
+
+<script>
+const DASHBOARD_DATA_URL = "/api/dashboard-data";
+const SAMPLE = {
+  dates:{start:'11 Mar',end:'18 Mar 2026'},
+  snapshot:[
+    {label:'Spend',    value:'$1,842',prev:'$1,620',wow:+13.7,dir:'neutral'},
+    {label:'Revenue',  value:'$9,210',prev:'$7,344',wow:+25.4,dir:'up'},
+    {label:'ROAS',     value:'5.0x',  prev:'4.5x',  wow:+10.0,dir:'up'},
+    {label:'CPA',      value:'$24.20',prev:'$28.50',wow:-15.1,dir:'up'},
+    {label:'Purchases',value:'76',    prev:'57',    wow:+33.3,dir:'up'},
+    {label:'MER',      value:'4.2x',  prev:'3.8x',  wow:+10.5,dir:'up'},
+    {label:'AOV',      value:'$121',  prev:'$129',  wow:-6.2, dir:'down'},
+  ],
+  funnel:[
+    {name:'Impressions',volume:'124,820',cost:null,   cvr:null,   barPct:100},
+    {name:'Clicks',     volume:'3,744',  cost:'$0.49',cvr:'3.0%', barPct:58},
+    {name:'Add to Cart',volume:'562',    cost:'$3.28',cvr:'15.0%',barPct:38},
+    {name:'Checkout',   volume:'228',    cost:'$8.08',cvr:'40.6%',barPct:22},
+    {name:'Purchases',  volume:'76',     cost:'$24.24',cvr:'33.3%',barPct:12},
+  ],
+  campaigns:[
+    {name:'Prospecting',type:'prospecting',spend:'$1,104',revenue:'$5,520',roas:5.0},
+    {name:'Retargeting',type:'retargeting',spend:'$552',  revenue:'$3,312',roas:6.0},
+    {name:'Advantage+', type:'advantage',  spend:'$186',  revenue:'$744',  roas:4.0},
+  ],
+  pillars:[
+    {name:'UGC',        pill:'pill-ugc',        roas7:5.8,roas14:5.2,roas30:4.6},
+    {name:'Founder',    pill:'pill-founder',    roas7:4.2,roas14:4.5,roas30:4.8},
+    {name:'Product',    pill:'pill-product',    roas7:3.8,roas14:3.9,roas30:4.1},
+    {name:'Lifestyle',  pill:'pill-lifestyle',  roas7:6.1,roas14:5.8,roas30:5.4},
+    {name:'Testimonial',pill:'pill-testimonial',roas7:4.9,roas14:4.4,roas30:3.9},
+    {name:'Evergreen',  pill:'pill-evergreen',  roas7:3.2,roas14:3.6,roas30:3.8},
+  ],
+  creatives:[
+    {rank:1,name:'Pant Length',       pillar:'UGC',        pill:'pill-ugc',        format:'Video',   roas:7.2,cpa:'$18.40',cvr:'4.2%',thumb:null},
+    {rank:2,name:'What People Think', pillar:'Lifestyle',  pill:'pill-lifestyle',  format:'Video',   roas:6.8,cpa:'$19.10',cvr:'3.9%',thumb:null},
+    {rank:3,name:'Common Problems V2',pillar:'Founder',    pill:'pill-founder',    format:'Video',   roas:6.4,cpa:'$20.50',cvr:'3.7%',thumb:null},
+    {rank:4,name:'Bibs That Fit V1',  pillar:'Product',    pill:'pill-product',    format:'Static',  roas:6.1,cpa:'$21.20',cvr:'3.5%',thumb:null},
+    {rank:5,name:'Four Ways',         pillar:'UGC',        pill:'pill-ugc',        format:'Video',   roas:5.9,cpa:'$22.00',cvr:'3.3%',thumb:null},
+    {rank:6,name:'FB Feedback',       pillar:'Testimonial',pill:'pill-testimonial',format:'Carousel',roas:5.6,cpa:'$23.10',cvr:'3.1%',thumb:null},
+  ],
+  recommendations:[
+    {type:'scale-up',  icon:'↑',title:'Scale: Video › Lifestyle',  desc:'ROAS trending up 7d vs 30d (+13%). Increase budget 20–30% this week.'},
+    {type:'scale-up',  icon:'↑',title:'Scale: Video › UGC',        desc:'Pant Length + Four Ways both above 5.5x. Test new UGC variants now.'},
+    {type:'fatigue',   icon:'⚠',title:'Fatigue: Founder Pillar',   desc:'7d ROAS (4.2x) declining vs 30d (4.8x). Refresh creative or cut frequency.'},
+    {type:'scale-down',icon:'↓',title:'Review: Evergreen Pillar',  desc:'Lowest ROAS across all windows (3.2–3.8x). Pause underperformers.'},
+  ]
+};
+
+const rc = r => r>=5?'roas-good':r>=3.5?'roas-mid':'roas-bad';
+const ff = (r7,r30) => (r30>0&&r7<r30*.88)?'<span class="fatigue-flag">FATIGUE</span>':'';
+const fi = f=>({Video:'▶',Static:'▣',Carousel:'◫'}[f]||'◉');
+
+function render(d) {
+  document.getElementById('report-dates').textContent = d.dates.start+' — '+d.dates.end;
+
+  document.getElementById('snapshot-grid').innerHTML = d.snapshot.map(s=>{
+    const sign=s.wow>0?'+':'';
+    const cls=s.dir==='up'?'up':s.dir==='down'?'down':'neutral';
+    const arrow=s.wow>0?'▲':s.wow<0?'▼':'—';
+    return `<div class="snap-card">
+      <div class="snap-label">${s.label}</div>
+      <div class="snap-value">${s.value}</div>
+      <div class="snap-wow ${cls}">${arrow} ${sign}${s.wow}%</div>
+      <div class="snap-prev">prev ${s.prev}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('funnel-grid').innerHTML = d.funnel.map(f=>`
+    <div class="funnel-card">
+      <div class="funnel-name">${f.name}</div>
+      <div class="funnel-volume">${f.volume}</div>
+      <div class="funnel-cost">${f.cost?'Cost '+f.cost:'—'}</div>
+      ${f.cvr?`<div class="funnel-cvr">CVR ${f.cvr}</div>`:''}
+      <div class="funnel-bar" style="width:${f.barPct}%"></div>
+    </div>`).join('');
+
+  document.getElementById('campaign-rows').innerHTML = d.campaigns.map(c=>`
+    <div class="table-row" style="grid-template-columns:2fr 1fr 1fr 1fr;">
+      <div class="row-name"><span class="campaign-dot dot-${c.type}"></span>${c.name}</div>
+      <div class="row-val">${c.spend}</div>
+      <div class="row-val">${c.revenue}</div>
+      <div class="${rc(c.roas)}">${c.roas}x</div>
+    </div>`).join('');
+
+  document.getElementById('pillar-rows').innerHTML = d.pillars.map(p=>`
+    <div class="table-row" style="grid-template-columns:1.8fr 1fr 1fr 1fr;">
+      <div class="row-name" style="gap:6px;">
+        <span class="pillar-tag ${p.pill}">${p.name}</span>${ff(p.roas7,p.roas30)}
+      </div>
+      <div class="period-sep ${rc(p.roas7)}">${p.roas7}x</div>
+      <div class="period-sep ${rc(p.roas14)}">${p.roas14}x</div>
+      <div class="period-sep ${rc(p.roas30)}">${p.roas30}x</div>
+    </div>`).join('');
+
+  document.getElementById('creatives-grid').innerHTML = d.creatives.map(c=>`
+    <div class="creative-card">
+      <div class="creative-rank">#${c.rank}</div>
+      ${c.thumb?`<img src="${c.thumb}" style="width:100%;aspect-ratio:4/5;object-fit:cover;">`
+        :`<div class="creative-thumb"><div class="thumb-icon">${fi(c.format)}</div><span>${c.format}</span></div>`}
+      <div class="creative-info">
+        <div class="creative-name">${c.name}</div>
+        <div style="margin-bottom:7px;"><span class="pillar-tag ${c.pill}">${c.pillar}</span></div>
+        <div class="creative-metrics">
+          <div class="creative-metric"><div class="cm-label">ROAS</div><div class="cm-value ${rc(c.roas)}">${c.roas}x</div></div>
+          <div class="creative-metric"><div class="cm-label">CPA</div><div class="cm-value">${c.cpa}</div></div>
+          <div class="creative-metric"><div class="cm-label">CVR</div><div class="cm-value">${c.cvr}</div></div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('reco-grid').innerHTML = d.recommendations.map(r=>`
+    <div class="reco-card">
+      <div class="reco-icon reco-${r.type}">${r.icon}</div>
+      <div><div class="reco-title">${r.title}</div><div class="reco-desc">${r.desc}</div></div>
+    </div>`).join('');
+
+  document.getElementById('last-updated').textContent =
+    'Updated '+new Date().toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'});
+}
+
+function switchPeriod(days,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+async function loadData(){
+  if(DASHBOARD_DATA_URL){
+    try{
+      const r=await fetch(DASHBOARD_DATA_URL);
+      const d=await r.json();
+      document.getElementById('data-notice').style.display='none';
+      render(d);
+    }catch(e){render(SAMPLE);}
+  }else{render(SAMPLE);}
+}
+
+// THEME
+function setTheme(mode) {
+  const root = document.documentElement;
+  document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + mode).classList.add('active');
+  localStorage.setItem('np-theme', mode);
+  if (mode === 'dark') { root.setAttribute('data-theme','dark'); }
+  else if (mode === 'light') { root.removeAttribute('data-theme'); }
+  else {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    prefersDark ? root.setAttribute('data-theme','dark') : root.removeAttribute('data-theme');
+  }
+}
+
+// Init theme from saved preference
+(function() {
+  const saved = localStorage.getItem('np-theme') || 'light';
+  setTheme(saved);
+})();
+
+// SCHEDULE SETTINGS
+async function loadSettings() {
+  try {
+    const r = await fetch('/api/schedule-settings');
+    const s = await r.json();
+    document.getElementById('enabled-toggle').checked = s.enabled;
+    document.getElementById('freq-select').value = s.frequencyDays;
+    document.getElementById('time-select').value = s.timeHourAEST;
+    document.getElementById('toggle-label').textContent = s.enabled ? 'Reports ON' : 'Reports OFF';
+    document.getElementById('status-dot').className = 'status-dot' + (s.enabled ? '' : ' off');
+  } catch(e) { console.error('Failed to load settings:', e); }
+}
+
+async function updateSetting(key, value) {
+  try {
+    await fetch('/api/schedule-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [key]: value })
+    });
+    if (key === 'enabled') {
+      document.getElementById('toggle-label').textContent = value ? 'Reports ON' : 'Reports OFF';
+      document.getElementById('status-dot').className = 'status-dot' + (value ? '' : ' off');
+    }
+  } catch(e) { console.error('Failed to update setting:', e); }
+}
+
+async function runNow() {
+  const btn = document.getElementById('run-now-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Running...';
+  try {
+    await fetch('/.netlify/functions/run-reports-background', { method: 'POST' });
+    btn.textContent = '✓ Triggered';
+    setTimeout(() => { btn.disabled = false; btn.textContent = '▶ Run Now'; loadData(); }, 3000);
+  } catch(e) {
+    btn.textContent = '✗ Failed';
+    setTimeout(() => { btn.disabled = false; btn.textContent = '▶ Run Now'; }, 3000);
+  }
+}
+
+loadSettings();
+loadData();
+</script>
+</body>
+</html>

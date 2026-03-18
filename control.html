@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NP Ads — Control Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f8fa;
+    --surface: #ffffff;
+    --border: #e3e6ea;
+    --text: #1a1f2e;
+    --text-secondary: #5c6370;
+    --text-muted: #9ba3af;
+    --purple: #7b68ee;
+    --purple-light: #ede9fd;
+    --green: #0fb66f;
+    --green-light: #e6f7f1;
+    --red: #f4364c;
+    --red-light: #feeaec;
+    --font: 'Inter', -apple-system, sans-serif;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.07);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    font-family: var(--font);
+    font-size: 13px;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    width: 100%;
+    max-width: 480px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--purple);
+    animation: breathe 3s ease-in-out infinite;
+  }
+  @keyframes breathe { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .panel-title {
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .panel-title span { color: var(--purple); }
+
+  .panel-body { padding: 24px; }
+
+  /* MAIN TOGGLE */
+  .toggle-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+  .toggle-card.active { border-color: var(--green); background: var(--green-light); }
+  .toggle-card.inactive { border-color: var(--red); background: var(--red-light); }
+
+  .toggle-info {}
+  .toggle-label {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 3px;
+  }
+  .toggle-status {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 26px;
+    flex-shrink: 0;
+  }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #cdd1d8;
+    border-radius: 26px;
+    transition: 0.3s;
+  }
+  .slider:before {
+    content: "";
+    position: absolute;
+    height: 20px; width: 20px;
+    left: 3px; bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  input:checked + .slider { background: var(--green); }
+  input:checked + .slider:before { transform: translateX(22px); }
+
+  /* STATUS PILLS */
+  .status-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .status-pill {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .pill-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .pill-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .pill-value.green { color: var(--green); }
+  .pill-value.red { color: var(--red); }
+
+  /* MANUAL TRIGGER */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+  }
+
+  .trigger-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+
+  .trigger-btn {
+    padding: 10px 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 8px;
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .trigger-btn:hover { background: var(--purple-light); color: var(--purple); border-color: var(--purple); }
+  .trigger-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .trigger-btn.loading { color: var(--purple); border-color: var(--purple); }
+
+  /* LAST RUN */
+  .last-run {
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--text);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: transform 0.3s ease;
+    z-index: 100;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { background: var(--green); }
+  .toast.error { background: var(--red); }
+</style>
+</head>
+<body>
+
+<div class="panel">
+  <div class="panel-header">
+    <div class="logo-dot"></div>
+    <div class="panel-title">Nobody's Princess <span>/ Ads Control</span></div>
+  </div>
+
+  <div class="panel-body">
+
+    <!-- MAIN TOGGLE -->
+    <div class="toggle-card" id="toggle-card">
+      <div class="toggle-info">
+        <div class="toggle-label" id="toggle-label">Loading...</div>
+        <div class="toggle-status" id="toggle-status">Checking status...</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="main-toggle" onchange="handleToggle(this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <!-- STATUS ROW -->
+    <div class="status-row">
+      <div class="status-pill">
+        <div class="pill-label">Schedule</div>
+        <div class="pill-value" id="schedule-val">Mon 9:00 AM</div>
+      </div>
+      <div class="status-pill">
+        <div class="pill-label">Last Report</div>
+        <div class="pill-value" id="last-report-val">—</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- MANUAL TRIGGER -->
+    <div class="section-label">Manual Trigger</div>
+    <div class="trigger-row">
+      <button class="trigger-btn" onclick="triggerReport(7)" id="btn-7">▶ 7 Day</button>
+      <button class="trigger-btn" onclick="triggerReport(14)" id="btn-14">▶ 14 Day</button>
+      <button class="trigger-btn" onclick="triggerReport(30)" id="btn-30">▶ 30 Day</button>
+    </div>
+
+    <div class="last-run" id="last-run-msg">Runs automatically every Monday 9:00 AM AEST</div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const BASE = 'https://nobodysprincess-paid-ads.netlify.app';
+
+  async function loadStatus() {
+    try {
+      const r = await fetch(`${BASE}/api/toggle-reports`);
+      const d = await r.json();
+      setToggleState(d.enabled);
+
+      // Check for last report data
+      const dr = await fetch(`${BASE}/api/dashboard-data`);
+      if (dr.ok) {
+        const dd = await dr.json();
+        if (dd.updatedAt) {
+          const dt = new Date(dd.updatedAt);
+          document.getElementById('last-report-val').textContent =
+            dt.toLocaleDateString('en-AU', { day: '2-digit', month: 'short' });
+        }
+      }
+    } catch(e) {
+      document.getElementById('toggle-label').textContent = 'Unable to connect';
+      document.getElementById('toggle-status').textContent = 'Check Netlify function status';
+    }
+  }
+
+  function setToggleState(enabled) {
+    const card = document.getElementById('toggle-card');
+    const label = document.getElementById('toggle-label');
+    const status = document.getElementById('toggle-status');
+    const toggle = document.getElementById('main-toggle');
+
+    toggle.checked = enabled;
+    card.className = 'toggle-card ' + (enabled ? 'active' : 'inactive');
+    label.textContent = enabled ? 'Reports Active' : 'Reports Paused';
+    status.textContent = enabled
+      ? 'Automated reports running on schedule'
+      : 'All scheduled reports are paused';
+  }
+
+  async function handleToggle(enabled) {
+    try {
+      const r = await fetch(`${BASE}/api/toggle-reports`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled })
+      });
+      const d = await r.json();
+      setToggleState(d.enabled);
+      showToast(enabled ? '✓ Reports enabled' : '✓ Reports paused', 'success');
+    } catch(e) {
+      showToast('Failed to update', 'error');
+      // Revert toggle
+      document.getElementById('main-toggle').checked = !enabled;
+    }
+  }
+
+  async function triggerReport(days) {
+    const btn = document.getElementById(`btn-${days}`);
+    btn.disabled = true;
+    btn.classList.add('loading');
+    btn.textContent = '● Running...';
+
+    try {
+      await fetch(`${BASE}/.netlify/functions/run-reports-background`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ days, manual: true })
+      });
+      showToast(`✓ ${days} day report triggered — check ClickUp in ~2 mins`, 'success');
+    } catch(e) {
+      showToast('Failed to trigger report', 'error');
+    } finally {
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        btn.textContent = `▶ ${days} Day`;
+      }, 3000);
+    }
+  }
+
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.className = `toast ${type}`, 3000);
+  }
+
+  loadStatus();
+</script>
+</body>
+</html>
