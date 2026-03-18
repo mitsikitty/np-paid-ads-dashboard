@@ -158,7 +158,7 @@
   .toggle input:checked + .toggle-slider { background:var(--green); }
   .toggle input:checked + .toggle-slider:before { transform:translateX(16px); }
 
-  .control-select { padding:5px 10px; font-family:var(--font); font-size:12px; font-weight:500; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:var(--radius-sm); cursor:pointer; }
+  .control-select { padding:5px 10px; font-family:var(--font); font-size:12px; font-weight:500; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:var(--radius-sm); cursor:pointer; min-width:120px; appearance:auto; -webkit-appearance:auto; }
   .control-select:focus { outline:none; border-color:var(--purple); }
 
   .run-now-btn { padding:6px 12px; font-family:var(--font); font-size:12px; font-weight:600; border:none; background:var(--purple); color:white; border-radius:var(--radius-sm); cursor:pointer; transition:opacity .15s; }
@@ -193,18 +193,20 @@
       </div>
       <div style="width:1px;height:18px;background:var(--border);"></div>
       <select class="control-select" id="freq-select" onchange="updateSetting('frequencyDays', parseInt(this.value))" title="Report frequency">
+        <option value="" disabled>Frequency</option>
         <option value="1">Daily</option>
         <option value="3">Every 3 days</option>
         <option value="7" selected>Weekly</option>
         <option value="14">Fortnightly</option>
       </select>
       <select class="control-select" id="time-select" onchange="updateSetting('timeHourAEST', parseInt(this.value))" title="Run time (AEST)">
-        <option value="6">6:00 AM</option>
-        <option value="7">7:00 AM</option>
-        <option value="8">8:00 AM</option>
-        <option value="9" selected>9:00 AM</option>
-        <option value="10">10:00 AM</option>
-        <option value="12">12:00 PM</option>
+        <option value="" disabled>Run time</option>
+        <option value="6">6:00 AM AEST</option>
+        <option value="7">7:00 AM AEST</option>
+        <option value="8">8:00 AM AEST</option>
+        <option value="9" selected>9:00 AM AEST</option>
+        <option value="10">10:00 AM AEST</option>
+        <option value="12">12:00 PM AEST</option>
       </select>
       <button class="run-now-btn" id="run-now-btn" onclick="runNow()">▶ Run Now</button>
     </div>
