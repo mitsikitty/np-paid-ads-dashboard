@@ -158,10 +158,20 @@ function parseFormat(adName: string): string {
 // ─── MAIN FUNCTION ───────────────────────────────────────────────────────────
 export default async (req: Request) => {
   const e = env();
-  const { since, until } = dateRange(e.REPORT_PERIOD_DAYS);
-  const prevRange = dateRange(e.REPORT_PERIOD_DAYS * 2);
+  const periods = [
+    { days: 7,  status: "7 DAY REPORT" },
+    { days: 14, status: "14 DAY REPORT" },
+    { days: 30, status: "30 DAY REPORT" },
+  ];
 
-  console.log(`Starting NP Paid Ads report — ${e.REPORT_PERIOD_DAYS} day — ${since} to ${until}`);
+  // Run all three report periods in one execution
+  const periods = [
+    { days: 7,  status: "7 DAY REPORT",  dateRange: dateRange(7) },
+    { days: 14, status: "14 DAY REPORT", dateRange: dateRange(14) },
+    { days: 30, status: "30 DAY REPORT", dateRange: dateRange(30) },
+  ];
+
+  console.log(`Starting NP Paid Ads reports — running 7, 14 and 30 day periods`);
 
   try {
     // Check schedule settings — respect on/off and frequency
@@ -210,12 +220,17 @@ export default async (req: Request) => {
     }
 
     // 2. Pull Shopify revenue once (for MER across all campaigns)
-    const shopify = await getShopifyRevenue(e.SHOPIFY_STORE, e.SHOPIFY_TOKEN, since, until);
-    console.log(`Shopify revenue: $${shopify.totalRevenue.toFixed(2)} across ${shopify.orderCount} orders`);
+    // 3. Loop over each period (7, 14, 30 day)
+    for (const period of periods) {
+      const { since, until } = dateRange(period.days);
+      const reportStatus = period.status;
 
-    // 3. Process each matched campaign
-    for (const { list, campaign } of matches) {
-      console.log(`Processing campaign: ${campaign.name}`);
+      const shopify = await getShopifyRevenue(e.SHOPIFY_STORE, e.SHOPIFY_TOKEN, since, until);
+      console.log(`[${period.days}d] Shopify revenue: $${shopify.totalRevenue.toFixed(2)} across ${shopify.orderCount} orders`);
+
+      // Process each matched campaign for this period
+      for (const { list, campaign } of matches) {
+        console.log(`[${period.days}d] Processing campaign: ${campaign.name}`);
 
       // Pull all Meta data in parallel
       const [accountInsights, campaignInsights, adInsights7d, adInsights14d, adInsights30d] = await Promise.all([
@@ -278,7 +293,7 @@ export default async (req: Request) => {
         .slice(0, 6);
 
       const prompt = `Campaign: ${campaign.name}
-Period: ${since} to ${until} (${e.REPORT_PERIOD_DAYS} days)
+Period: ${since} to ${until} (${period.days} days)
 
 ACCOUNT METRICS:
 - Spend: $${spend.toFixed(2)}
@@ -316,7 +331,7 @@ Please provide your full analysis and recommendations.`;
 
       // 5. Build dashboard data and save to Netlify Blobs storage
       const dashboardData = {
-        period: e.REPORT_PERIOD_DAYS,
+        period: period.days,
         dates: { start: since, end: until },
         campaign: campaign.name,
         updatedAt: new Date().toISOString(),
@@ -372,12 +387,15 @@ Please provide your full analysis and recommendations.`;
 
       // 6. Create ClickUp task
       const taskDate = new Date().toLocaleDateString("en-AU", { day: "2-digit", month: "short", year: "numeric" });
-      const taskName = `${campaign.name} — ${e.REPORT_PERIOD_DAYS} Day Report — ${taskDate}`;
+      const taskName = `${campaign.name} — ${period.days} Day Report — ${taskDate}`;
       const taskDescription = `# ${taskName}\n\n${analysis}`;
 
-      const task = await createClickUpTask(list.id, e.CLICKUP_API_KEY, taskName, taskDescription, e.REPORT_STATUS);
+      const task = await createClickUpTask(list.id, e.CLICKUP_API_KEY, taskName, taskDescription, reportStatus);
       console.log(`ClickUp task created: ${task.id} in list ${list.name}`);
     }
+
+      } // end campaign loop
+    } // end period loop
 
     console.log("All reports complete.");
 
