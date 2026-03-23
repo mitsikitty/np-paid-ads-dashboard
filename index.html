@@ -42,9 +42,7 @@
     --shadow-md: 0 4px 16px rgba(0,0,0,0.3);
   }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:var(--font); font-size:13px; line-height:1.5; transition:background .2s,color .2s; transform:translateZ(0); will-change:transform; }
-  @keyframes _iframePoke { from{opacity:.999} to{opacity:1} }
-  html { animation: _iframePoke .1s 1; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font); font-size:13px; line-height:1.5; transition:background .2s,color .2s; }
   .theme-toggle { display:flex; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:2px; gap:2px; }
   .theme-btn { width:28px; height:28px; border:none; background:transparent; color:var(--text-muted); cursor:pointer; border-radius:4px; transition:all .15s; display:flex; align-items:center; justify-content:center; font-size:13px; }
   .theme-btn.active { background:var(--surface); color:var(--text); box-shadow:var(--shadow); }
@@ -530,7 +528,7 @@ function setTheme(mode) {
   const root = document.documentElement;
   document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('btn-' + mode).classList.add('active');
-  try { localStorage.setItem('np-theme', mode); } catch(e) {}
+  localStorage.setItem('np-theme', mode);
   if (mode === 'dark') { root.setAttribute('data-theme','dark'); }
   else if (mode === 'light') { root.removeAttribute('data-theme'); }
   else {
@@ -541,7 +539,7 @@ function setTheme(mode) {
 
 // Init theme from saved preference
 (function() {
-  const saved = (() => { try { return localStorage.getItem('np-theme'); } catch(e) { return null; } })() || 'light';
+  const saved = localStorage.getItem('np-theme') || 'light';
   setTheme(saved);
 })();
 
@@ -588,20 +586,6 @@ async function runNow() {
 
 loadSettings();
 loadData();
-
-// Force repaint in iframes (fixes ClickUp blank embed)
-// Cycles through multiple strategies since different browsers/embeds need different triggers
-(function forceIframePaint() {
-  // Strategy 1: scroll nudge
-  setTimeout(function() { window.scrollTo(0, 1); window.scrollTo(0, 0); }, 50);
-  // Strategy 2: reflow trigger via resize event
-  setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 200);
-  // Strategy 3: force layout recalc
-  setTimeout(function() {
-    document.body.style.minHeight = '100.1vh';
-    requestAnimationFrame(function() { document.body.style.minHeight = ''; });
-  }, 400);
-})();
 </script>
 
 <!-- CHAT BUBBLE -->
