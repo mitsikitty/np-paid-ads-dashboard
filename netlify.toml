@@ -1,5 +1,9 @@
-# Edge function auth temporarily disabled to test ClickUp embed
-# [[edge_functions]]
-#   path = "/*"
-#   excludedPath = ["/.netlify/*", "/assets/*", "/api/*"]
-#   function = "auth"
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "ALLOWALL"
+    Content-Security-Policy = "frame-ancestors *"
