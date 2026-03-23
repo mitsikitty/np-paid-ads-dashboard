@@ -42,10 +42,8 @@
     --shadow-md: 0 4px 16px rgba(0,0,0,0.3);
   }
   * { margin:0; padding:0; box-sizing:border-box; }
-  html, body { height:100%; overflow:hidden; }
-  body { background:var(--bg); color:var(--text); font-family:var(--font); font-size:13px; line-height:1.5; transition:background .2s,color .2s; display:flex; flex-direction:column; }
-  .header { flex-shrink:0; }
-  .footer { flex-shrink:0; }
+  html { height:100%; overflow:hidden; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font); font-size:13px; line-height:1.5; transition:background .2s,color .2s; transform-origin:top left; }
   .theme-toggle { display:flex; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:2px; gap:2px; }
   .theme-btn { width:28px; height:28px; border:none; background:transparent; color:var(--text-muted); cursor:pointer; border-radius:4px; transition:all .15s; display:flex; align-items:center; justify-content:center; font-size:13px; }
   .theme-btn.active { background:var(--surface); color:var(--text); box-shadow:var(--shadow); }
@@ -69,7 +67,7 @@
   .refresh-btn:hover { background:var(--bg); color:var(--text); }
 
   /* MAIN */
-  .main { padding:20px 24px; display:flex; flex-direction:column; gap:16px; transform-origin:top left; }
+  .main { padding:20px 24px; display:flex; flex-direction:column; gap:16px; }
 
   /* NOTICE */
   .data-notice { background:var(--amber-light); border:1px solid #fcd34d; border-radius:var(--radius-sm); padding:9px 14px; font-size:12px; color:#92400e; display:flex; align-items:center; gap:7px; }
@@ -694,22 +692,17 @@ window.render = function(data) {
   requestAnimationFrame(autoScale);
 };
 
-// AUTO-SCALE: fit content to viewport (no scrolling in iframe)
+// AUTO-SCALE: fit entire page to viewport (no scrolling in iframe)
 function autoScale() {
-  const main = document.querySelector('.main');
-  if (!main) return;
-  main.style.transform = 'none';
-  main.style.width = '100%';
-  main.style.height = '';
-  const header = document.querySelector('.header');
-  const footer = document.querySelector('.footer');
-  const available = window.innerHeight - (header ? header.offsetHeight : 0) - (footer ? footer.offsetHeight : 0);
-  const natural = main.scrollHeight;
+  const body = document.body;
+  body.style.transform = 'none';
+  body.style.width = '100%';
+  const natural = body.scrollHeight;
+  const available = window.innerHeight;
   if (natural > available && available > 0) {
     const scale = available / natural;
-    main.style.transform = `scale(${scale})`;
-    main.style.width = `${100 / scale}%`;
-    main.style.height = `${natural}px`;
+    body.style.transform = `scale(${scale})`;
+    body.style.width = `${100 / scale}%`;
   }
 }
 window.addEventListener('resize', autoScale);
