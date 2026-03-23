@@ -53,7 +53,7 @@ export default async (req: Request, context: Context) => {
           status: 302,
           headers: {
             Location: redirectTo,
-            "Set-Cookie": `${COOKIE}=${encodeURIComponent(cookieVal)}; Path=/; HttpOnly; SameSite=Strict`
+            "Set-Cookie": `${COOKIE}=${encodeURIComponent(cookieVal)}; Path=/; HttpOnly; SameSite=None; Secure`
           }
         });
       }

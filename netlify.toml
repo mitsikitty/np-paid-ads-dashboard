@@ -1,4 +1,4 @@
 [[edge_functions]]
   path = "/*"
-  excludedPath = ["/.netlify/*", "/assets/*"]
+  excludedPath = ["/.netlify/*", "/assets/*", "/api/*"]
   function = "auth"
