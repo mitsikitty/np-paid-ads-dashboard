@@ -123,7 +123,7 @@
 
   /* CREATIVES */
   .creatives-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; }
-  .creative-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); transition:box-shadow .15s, transform .15s; position:relative; }
+  .creative-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); transition:box-shadow .15s, transform .15s; position:relative; text-decoration:none; color:inherit; display:block; cursor:pointer; }
   .creative-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
   .creative-rank { position:absolute; top:7px; left:7px; width:20px; height:20px; background:rgba(0,0,0,.5); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:#fff; z-index:2; }
   .creative-thumb { width:100%; aspect-ratio:4/5; background:linear-gradient(135deg,#f0f2f5,#e3e6ea); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px; color:var(--text-muted); font-size:10px; font-weight:500; }
@@ -424,12 +424,12 @@ const SAMPLE = {
     {name:'Evergreen',  pill:'pill-evergreen',  roas7:3.2,roas14:3.6,roas30:3.8},
   ],
   creatives:[
-    {rank:1,name:'Pant Length',       pillar:'UGC',        pill:'pill-ugc',        format:'Video',   roas:7.2,cpa:'$18.40',cvr:'4.2%',thumb:null},
-    {rank:2,name:'What People Think', pillar:'Lifestyle',  pill:'pill-lifestyle',  format:'Video',   roas:6.8,cpa:'$19.10',cvr:'3.9%',thumb:null},
-    {rank:3,name:'Common Problems V2',pillar:'Founder',    pill:'pill-founder',    format:'Video',   roas:6.4,cpa:'$20.50',cvr:'3.7%',thumb:null},
-    {rank:4,name:'Bibs That Fit V1',  pillar:'Product',    pill:'pill-product',    format:'Static',  roas:6.1,cpa:'$21.20',cvr:'3.5%',thumb:null},
-    {rank:5,name:'Four Ways',         pillar:'UGC',        pill:'pill-ugc',        format:'Video',   roas:5.9,cpa:'$22.00',cvr:'3.3%',thumb:null},
-    {rank:6,name:'FB Feedback',       pillar:'Testimonial',pill:'pill-testimonial',format:'Carousel',roas:5.6,cpa:'$23.10',cvr:'3.1%',thumb:null},
+    {rank:1,name:'Pant Length',       pillar:'UGC',        pill:'pill-ugc',        format:'Video',   roas:7.2,cpa:'$18.40',cvr:'4.2%',thumb:null,clickupId:'86czkhhgm'},
+    {rank:2,name:'What People Think', pillar:'Lifestyle',  pill:'pill-lifestyle',  format:'Video',   roas:6.8,cpa:'$19.10',cvr:'3.9%',thumb:null,clickupId:'86czkhrck'},
+    {rank:3,name:'Common Problems V2',pillar:'Founder',    pill:'pill-founder',    format:'Video',   roas:6.4,cpa:'$20.50',cvr:'3.7%',thumb:null,clickupId:'86czkh5p6'},
+    {rank:4,name:'Bibs That Fit V1',  pillar:'Product',    pill:'pill-product',    format:'Static',  roas:6.1,cpa:'$21.20',cvr:'3.5%',thumb:null,clickupId:'86czkh68z'},
+    {rank:5,name:'Four Ways',         pillar:'UGC',        pill:'pill-ugc',        format:'Video',   roas:5.9,cpa:'$22.00',cvr:'3.3%',thumb:null,clickupId:'86czkhdy3'},
+    {rank:6,name:'FB Feedback',       pillar:'Testimonial',pill:'pill-testimonial',format:'Carousel',roas:5.6,cpa:'$23.10',cvr:'3.1%',thumb:null,clickupId:'86czkhe0x'},
   ],
   recommendations:[
     {type:'scale-up',  icon:'↑',title:'Scale: Video › Lifestyle',  desc:'ROAS trending up 7d vs 30d (+13%). Increase budget 20–30% this week.'},
@@ -485,13 +485,16 @@ function render(d) {
       <div class="period-sep ${rc(p.roas30)}">${p.roas30}x</div>
     </div>`).join('');
 
-  document.getElementById('creatives-grid').innerHTML = d.creatives.map(c=>`
-    <div class="creative-card">
+  document.getElementById('creatives-grid').innerHTML = d.creatives.map(c=>{
+    const url = c.clickupId ? `https://app.clickup.com/t/${c.clickupId}` : null;
+    const tag = url ? 'a' : 'div';
+    const href = url ? ` href="${url}" target="_blank" rel="noopener"` : '';
+    return `<${tag} class="creative-card"${href}>
       <div class="creative-rank">#${c.rank}</div>
       ${c.thumb?`<img src="${c.thumb}" style="width:100%;aspect-ratio:4/5;object-fit:cover;">`
         :`<div class="creative-thumb"><div class="thumb-icon">${fi(c.format)}</div><span>${c.format}</span></div>`}
       <div class="creative-info">
-        <div class="creative-name">${c.name}</div>
+        <div class="creative-name">${c.name}${url?' <span style="font-size:9px;opacity:.5;">↗</span>':''}</div>
         <div style="margin-bottom:7px;"><span class="pillar-tag ${c.pill}">${c.pillar}</span></div>
         <div class="creative-metrics">
           <div class="creative-metric"><div class="cm-label">ROAS</div><div class="cm-value ${rc(c.roas)}">${c.roas}x</div></div>
@@ -499,7 +502,8 @@ function render(d) {
           <div class="creative-metric"><div class="cm-label">CVR</div><div class="cm-value">${c.cvr}</div></div>
         </div>
       </div>
-    </div>`).join('');
+    </${tag}>`;
+  }).join('');
 
   document.getElementById('reco-grid').innerHTML = d.recommendations.map(r=>`
     <div class="reco-card">
