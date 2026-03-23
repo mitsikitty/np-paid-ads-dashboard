@@ -5,12 +5,12 @@ const COOKIE = "np_auth";
 async function makeToken(password: string, secret: string): Promise<string> {
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
-    "raw", enc.encode(secret),
+    "raw", enc.encode(secret || "fallback"),
     { name: "HMAC", hash: "SHA-256" },
     false, ["sign"]
   );
   const sig = await crypto.subtle.sign("HMAC", key, enc.encode(password));
-  return btoa(String.fromCharCode(...new Uint8Array(sig)));
+  return btoa(Array.from(new Uint8Array(sig)).map(b => String.fromCharCode(b)).join(""));
 }
 
 function getCookies(req: Request): Record<string, string> {
@@ -25,41 +25,45 @@ function getCookies(req: Request): Record<string, string> {
 }
 
 export default async (req: Request, context: Context) => {
-  const url = new URL(req.url);
-  const password = Netlify.env.get("AUTH_PASSWORD") ?? "";
-  const siteToken = Netlify.env.get("AUTH_TOKEN") ?? "";
-  const secret = Netlify.env.get("AUTH_SECRET") ?? "";
+  try {
+    const url = new URL(req.url);
+    const password = Netlify.env.get("AUTH_PASSWORD") ?? "";
+    const siteToken = Netlify.env.get("AUTH_TOKEN") ?? "";
+    const secret = Netlify.env.get("AUTH_SECRET") ?? "";
 
-  // URL token — used by ClickUp iframe embeds (no cookie support)
-  if (siteToken && url.searchParams.get("token") === siteToken) {
-    return context.next();
-  }
-
-  // Cookie auth — set after successful password entry in browser
-  const expectedVal = await makeToken(password, secret);
-  if (getCookies(req)[COOKIE] === expectedVal) {
-    return context.next();
-  }
-
-  // Handle password form submission
-  if (req.method === "POST" && url.pathname === "/_auth") {
-    const form = await req.formData();
-    const submitted = (form.get("password") as string) ?? "";
-    if (submitted === password) {
-      const cookieVal = await makeToken(password, secret);
-      const redirectTo = url.searchParams.get("redirect") ?? "/";
-      return new Response(null, {
-        status: 302,
-        headers: {
-          Location: redirectTo,
-          "Set-Cookie": `${COOKIE}=${encodeURIComponent(cookieVal)}; Path=/; HttpOnly; SameSite=Strict`
-        }
-      });
+    // URL token — used by ClickUp iframe embeds (no cookie support)
+    if (siteToken && url.searchParams.get("token") === siteToken) {
+      return context.next();
     }
-    return loginPage(req.url, true);
-  }
 
-  return loginPage(req.url, false);
+    // Cookie auth — set after successful password entry in browser
+    const expectedVal = await makeToken(password, secret);
+    if (getCookies(req)[COOKIE] === expectedVal) {
+      return context.next();
+    }
+
+    // Handle password form submission
+    if (req.method === "POST" && url.pathname === "/_auth") {
+      const form = await req.formData();
+      const submitted = (form.get("password") as string) ?? "";
+      if (submitted === password) {
+        const cookieVal = await makeToken(password, secret);
+        const redirectTo = url.searchParams.get("redirect") ?? "/";
+        return new Response(null, {
+          status: 302,
+          headers: {
+            Location: redirectTo,
+            "Set-Cookie": `${COOKIE}=${encodeURIComponent(cookieVal)}; Path=/; HttpOnly; SameSite=Strict`
+          }
+        });
+      }
+      return loginPage(req.url, true);
+    }
+
+    return loginPage(req.url, false);
+  } catch (err) {
+    return new Response("Auth error: " + String(err), { status: 500 });
+  }
 };
 
 function loginPage(redirectUrl: string, error: boolean): Response {
