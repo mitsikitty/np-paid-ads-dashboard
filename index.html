@@ -528,7 +528,7 @@ function setTheme(mode) {
   const root = document.documentElement;
   document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('btn-' + mode).classList.add('active');
-  localStorage.setItem('np-theme', mode);
+  try { localStorage.setItem('np-theme', mode); } catch(e) {}
   if (mode === 'dark') { root.setAttribute('data-theme','dark'); }
   else if (mode === 'light') { root.removeAttribute('data-theme'); }
   else {
@@ -539,7 +539,7 @@ function setTheme(mode) {
 
 // Init theme from saved preference
 (function() {
-  const saved = localStorage.getItem('np-theme') || 'light';
+  const saved = (() => { try { return localStorage.getItem('np-theme'); } catch(e) { return null; } })() || 'light';
   setTheme(saved);
 })();
 
