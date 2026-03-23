@@ -386,7 +386,6 @@ Please provide your full analysis and recommendations.`;
 
       const task = await createClickUpTask(list.id, e.CLICKUP_API_KEY, taskName, taskDescription, reportStatus);
       console.log(`ClickUp task created: ${task.id} in list ${list.name}`);
-    }
 
       } // end campaign loop
     } // end period loop
