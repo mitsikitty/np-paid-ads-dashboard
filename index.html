@@ -42,7 +42,9 @@
     --shadow-md: 0 4px 16px rgba(0,0,0,0.3);
   }
   * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; overflow:hidden; }
   body { background:var(--bg); color:var(--text); font-family:var(--font); font-size:13px; line-height:1.5; transition:background .2s,color .2s; }
+  .dashboard-wrap { transform-origin:top left; width:100%; }
   .theme-toggle { display:flex; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:2px; gap:2px; }
   .theme-btn { width:28px; height:28px; border:none; background:transparent; color:var(--text-muted); cursor:pointer; border-radius:4px; transition:all .15s; display:flex; align-items:center; justify-content:center; font-size:13px; }
   .theme-btn.active { background:var(--surface); color:var(--text); box-shadow:var(--shadow); }
@@ -271,6 +273,7 @@
 </style>
 </head>
 <body>
+<div class="dashboard-wrap" id="dashboard-wrap">
 
 <div class="header">
   <div class="header-left">
@@ -505,6 +508,9 @@ function render(d) {
 
   document.getElementById('last-updated').textContent =
     'Updated '+new Date().toLocaleString('en-AU',{dateStyle:'medium',timeStyle:'short'});
+
+  // Re-fit after content renders
+  requestAnimationFrame(() => requestAnimationFrame(fitToViewport));
 }
 
 function switchPeriod(days,btn){
@@ -586,7 +592,40 @@ async function runNow() {
 
 loadSettings();
 loadData();
+
+// Auto-scale dashboard to fit viewport (no scrolling in iframe)
+function fitToViewport() {
+  const wrap = document.getElementById('dashboard-wrap');
+  if (!wrap) return;
+  // Reset scale to measure natural height
+  wrap.style.transform = 'none';
+  const contentH = wrap.scrollHeight;
+  const viewportH = window.innerHeight;
+  const viewportW = window.innerWidth;
+  const contentW = wrap.scrollWidth;
+  if (contentH > viewportH || contentW > viewportW) {
+    const scale = Math.min(viewportH / contentH, viewportW / contentW, 1);
+    wrap.style.transform = `scale(${scale})`;
+    wrap.style.width = (100 / scale) + '%';
+  } else {
+    wrap.style.transform = 'none';
+    wrap.style.width = '100%';
+  }
+}
+
+// Run after render + on resize
+window.addEventListener('resize', fitToViewport);
+// Initial fit after content paints
+requestAnimationFrame(() => requestAnimationFrame(fitToViewport));
+
+// Force iframe repaint — fixes ClickUp blank embed on first load
+setTimeout(() => {
+  document.body.style.opacity = '0.99';
+  requestAnimationFrame(() => { document.body.style.opacity = '1'; });
+}, 100);
 </script>
+
+</div><!-- /dashboard-wrap -->
 
 <!-- CHAT BUBBLE -->
 <div class="chat-bubble">
