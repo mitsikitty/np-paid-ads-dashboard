@@ -1,3 +1,7 @@
+[build]
+  command = ""
+  publish = "."
+
 [[edge_functions]]
   path = "/*"
   function = "auth"
