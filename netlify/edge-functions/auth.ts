@@ -1,6 +1,18 @@
 import type { Context, Config } from "@netlify/edge-functions";
 
 const COOKIE = "np_auth";
+const IFRAME_HEADERS: Record<string, string> = {
+  "X-Frame-Options": "ALLOWALL",
+  "Content-Security-Policy": "frame-ancestors *",
+};
+
+function addIframeHeaders(resp: Response): Response {
+  const newResp = new Response(resp.body, resp);
+  for (const [k, v] of Object.entries(IFRAME_HEADERS)) {
+    newResp.headers.set(k, v);
+  }
+  return newResp;
+}
 
 async function makeToken(password: string, secret: string): Promise<string> {
   const enc = new TextEncoder();
@@ -33,13 +45,13 @@ export default async (req: Request, context: Context) => {
 
     // URL token — used by ClickUp iframe embeds (no cookie support)
     if (siteToken && url.searchParams.get("token") === siteToken) {
-      return context.next();
+      return addIframeHeaders(await context.next());
     }
 
     // Cookie auth — set after successful password entry in browser
     const expectedVal = await makeToken(password, secret);
     if (getCookies(req)[COOKIE] === expectedVal) {
-      return context.next();
+      return addIframeHeaders(await context.next());
     }
 
     // Handle password form submission
@@ -102,7 +114,7 @@ button:hover{opacity:.88}
 </html>`;
   return new Response(html, {
     status: error ? 401 : 200,
-    headers: { "Content-Type": "text/html" }
+    headers: { "Content-Type": "text/html", ...IFRAME_HEADERS }
   });
 }
 
