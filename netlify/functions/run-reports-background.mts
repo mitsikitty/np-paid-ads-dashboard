@@ -158,12 +158,6 @@ function parseFormat(adName: string): string {
 // ─── MAIN FUNCTION ───────────────────────────────────────────────────────────
 export default async (req: Request) => {
   const e = env();
-  const periods = [
-    { days: 7,  status: "7 DAY REPORT" },
-    { days: 14, status: "14 DAY REPORT" },
-    { days: 30, status: "30 DAY REPORT" },
-  ];
-
   // Run all three report periods in one execution
   const periods = [
     { days: 7,  status: "7 DAY REPORT",  dateRange: dateRange(7) },
@@ -392,9 +386,7 @@ Please provide your full analysis and recommendations.`;
 
       const task = await createClickUpTask(list.id, e.CLICKUP_API_KEY, taskName, taskDescription, reportStatus);
       console.log(`ClickUp task created: ${task.id} in list ${list.name}`);
-    }
-
-      } // end campaign loop
+    } // end campaign loop
     } // end period loop
 
     console.log("All reports complete.");
