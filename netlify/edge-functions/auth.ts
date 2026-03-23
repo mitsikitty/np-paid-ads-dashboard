@@ -31,24 +31,23 @@ export default async (req: Request, context: Context) => {
     const siteToken = Netlify.env.get("AUTH_TOKEN") ?? "";
     const secret = Netlify.env.get("AUTH_SECRET") ?? "";
 
-    const iframeHeaders = {
-      "X-Frame-Options": "ALLOWALL",
-      "Content-Security-Policy": "frame-ancestors *",
-    };
-
     // URL token — used by ClickUp iframe embeds (no cookie support)
     if (siteToken && url.searchParams.get("token") === siteToken) {
       const resp = await context.next();
-      for (const [k, v] of Object.entries(iframeHeaders)) resp.headers.set(k, v);
-      return resp;
+      const headers = new Headers(resp.headers);
+      headers.set("X-Frame-Options", "ALLOWALL");
+      headers.set("Content-Security-Policy", "frame-ancestors *");
+      return new Response(resp.body, { status: resp.status, statusText: resp.statusText, headers });
     }
 
     // Cookie auth — set after successful password entry in browser
     const expectedVal = await makeToken(password, secret);
     if (getCookies(req)[COOKIE] === expectedVal) {
       const resp = await context.next();
-      for (const [k, v] of Object.entries(iframeHeaders)) resp.headers.set(k, v);
-      return resp;
+      const headers = new Headers(resp.headers);
+      headers.set("X-Frame-Options", "ALLOWALL");
+      headers.set("Content-Security-Policy", "frame-ancestors *");
+      return new Response(resp.body, { status: resp.status, statusText: resp.statusText, headers });
     }
 
     // Handle password form submission
