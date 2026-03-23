@@ -586,6 +586,20 @@ async function runNow() {
 
 loadSettings();
 loadData();
+
+// Force repaint in iframes (fixes ClickUp blank embed)
+// Cycles through multiple strategies since different browsers/embeds need different triggers
+(function forceIframePaint() {
+  // Strategy 1: scroll nudge
+  setTimeout(function() { window.scrollTo(0, 1); window.scrollTo(0, 0); }, 50);
+  // Strategy 2: reflow trigger via resize event
+  setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 200);
+  // Strategy 3: force layout recalc
+  setTimeout(function() {
+    document.body.style.minHeight = '100.1vh';
+    requestAnimationFrame(function() { document.body.style.minHeight = ''; });
+  }, 400);
+})();
 </script>
 
 <!-- CHAT BUBBLE -->
