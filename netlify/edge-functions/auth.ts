@@ -1,18 +1,6 @@
 import type { Context, Config } from "@netlify/edge-functions";
 
 const COOKIE = "np_auth";
-const IFRAME_HEADERS: Record<string, string> = {
-  "X-Frame-Options": "ALLOWALL",
-  "Content-Security-Policy": "frame-ancestors *",
-};
-
-function addIframeHeaders(resp: Response): Response {
-  const newResp = new Response(resp.body, resp);
-  for (const [k, v] of Object.entries(IFRAME_HEADERS)) {
-    newResp.headers.set(k, v);
-  }
-  return newResp;
-}
 
 async function makeToken(password: string, secret: string): Promise<string> {
   const enc = new TextEncoder();
@@ -43,15 +31,24 @@ export default async (req: Request, context: Context) => {
     const siteToken = Netlify.env.get("AUTH_TOKEN") ?? "";
     const secret = Netlify.env.get("AUTH_SECRET") ?? "";
 
+    const iframeHeaders = {
+      "X-Frame-Options": "ALLOWALL",
+      "Content-Security-Policy": "frame-ancestors *",
+    };
+
     // URL token — used by ClickUp iframe embeds (no cookie support)
     if (siteToken && url.searchParams.get("token") === siteToken) {
-      return addIframeHeaders(await context.next());
+      const resp = await context.next();
+      for (const [k, v] of Object.entries(iframeHeaders)) resp.headers.set(k, v);
+      return resp;
     }
 
     // Cookie auth — set after successful password entry in browser
     const expectedVal = await makeToken(password, secret);
     if (getCookies(req)[COOKIE] === expectedVal) {
-      return addIframeHeaders(await context.next());
+      const resp = await context.next();
+      for (const [k, v] of Object.entries(iframeHeaders)) resp.headers.set(k, v);
+      return resp;
     }
 
     // Handle password form submission
@@ -65,7 +62,7 @@ export default async (req: Request, context: Context) => {
           status: 302,
           headers: {
             Location: redirectTo,
-            "Set-Cookie": `${COOKIE}=${encodeURIComponent(cookieVal)}; Path=/; HttpOnly; SameSite=None; Secure`
+            "Set-Cookie": `${COOKIE}=${encodeURIComponent(cookieVal)}; Path=/; HttpOnly; SameSite=Strict`
           }
         });
       }
@@ -114,7 +111,7 @@ button:hover{opacity:.88}
 </html>`;
   return new Response(html, {
     status: error ? 401 : 200,
-    headers: { "Content-Type": "text/html", ...IFRAME_HEADERS }
+    headers: { "Content-Type": "text/html", "X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors *" }
   });
 }
 
