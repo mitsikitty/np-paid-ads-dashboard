@@ -40,7 +40,7 @@ export default async (req: Request, context: Context) => {
     const results: Record<string, { clickupId: string; clickupUrl: string } | null> = {};
     for (const name of names) {
       const match = taskMap.get(name.toLowerCase().trim());
-      results[name] = match ? { clickupId: match.id, clickupUrl: match.url } : null;
+      results[name] = match ? { clickupId: match.id, clickupUrl: `clickup://t/${match.id}` } : null;
     }
 
     return new Response(JSON.stringify(results), { status: 200, headers });

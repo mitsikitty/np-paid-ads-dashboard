@@ -565,8 +565,7 @@ async function linkCreativesToClickUp(names) {
       const match = map[name];
       if (match && match.clickupUrl) {
         const link = document.createElement('a');
-        link.href = '#';
-        link.onclick = function(e) { e.preventDefault(); window.open(match.clickupUrl, '_blank'); return false; };
+        link.href = match.clickupUrl;
         link.className = 'creative-card';
         link.setAttribute('data-creative-name', name);
         link.innerHTML = card.innerHTML;
