@@ -1,7 +1,7 @@
 import type { Context } from "@netlify/functions";
 
 const CLICKUP_API = "https://api.clickup.com/api/v2";
-const LIST_ID = "901609254884"; // W25 AU Paid Ads
+const LIST_ID = "901613760525";
 
 export default async (req: Request, context: Context) => {
   const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
