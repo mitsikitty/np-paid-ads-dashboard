@@ -424,12 +424,12 @@ const SAMPLE = {
     {name:'Evergreen',  pill:'pill-evergreen',  roas7:3.2,roas14:3.6,roas30:3.8},
   ],
   creatives:[
-    {rank:1,name:'Pant Length',       pillar:'UGC',        pill:'pill-ugc',        format:'Video',   roas:7.2,cpa:'$18.40',cvr:'4.2%',thumb:null,clickupId:'86czkhhgm'},
-    {rank:2,name:'What People Think', pillar:'Lifestyle',  pill:'pill-lifestyle',  format:'Video',   roas:6.8,cpa:'$19.10',cvr:'3.9%',thumb:null,clickupId:'86czkhrck'},
-    {rank:3,name:'Common Problems V2',pillar:'Founder',    pill:'pill-founder',    format:'Video',   roas:6.4,cpa:'$20.50',cvr:'3.7%',thumb:null,clickupId:'86czkh5p6'},
-    {rank:4,name:'Bibs That Fit V1',  pillar:'Product',    pill:'pill-product',    format:'Static',  roas:6.1,cpa:'$21.20',cvr:'3.5%',thumb:null,clickupId:'86czkh68z'},
-    {rank:5,name:'Four Ways',         pillar:'UGC',        pill:'pill-ugc',        format:'Video',   roas:5.9,cpa:'$22.00',cvr:'3.3%',thumb:null,clickupId:'86czkhdy3'},
-    {rank:6,name:'FB Feedback',       pillar:'Testimonial',pill:'pill-testimonial',format:'Carousel',roas:5.6,cpa:'$23.10',cvr:'3.1%',thumb:null,clickupId:'86czkhe0x'},
+    {rank:1,name:'Pant Length',       pillar:'UGC',        pill:'pill-ugc',        format:'Video',   roas:7.2,cpa:'$18.40',cvr:'4.2%',thumb:null},
+    {rank:2,name:'What People Think', pillar:'Lifestyle',  pill:'pill-lifestyle',  format:'Video',   roas:6.8,cpa:'$19.10',cvr:'3.9%',thumb:null},
+    {rank:3,name:'Common Problems V2',pillar:'Founder',    pill:'pill-founder',    format:'Video',   roas:6.4,cpa:'$20.50',cvr:'3.7%',thumb:null},
+    {rank:4,name:'Bibs That Fit V1',  pillar:'Product',    pill:'pill-product',    format:'Static',  roas:6.1,cpa:'$21.20',cvr:'3.5%',thumb:null},
+    {rank:5,name:'Four Ways',         pillar:'UGC',        pill:'pill-ugc',        format:'Video',   roas:5.9,cpa:'$22.00',cvr:'3.3%',thumb:null},
+    {rank:6,name:'FB Feedback',       pillar:'Testimonial',pill:'pill-testimonial',format:'Carousel',roas:5.6,cpa:'$23.10',cvr:'3.1%',thumb:null},
   ],
   recommendations:[
     {type:'scale-up',  icon:'↑',title:'Scale: Video › Lifestyle',  desc:'ROAS trending up 7d vs 30d (+13%). Increase budget 20–30% this week.'},
@@ -485,16 +485,13 @@ function render(d) {
       <div class="period-sep ${rc(p.roas30)}">${p.roas30}x</div>
     </div>`).join('');
 
-  document.getElementById('creatives-grid').innerHTML = d.creatives.map(c=>{
-    const url = c.clickupId ? `https://app.clickup.com/t/${c.clickupId}` : null;
-    const tag = url ? 'a' : 'div';
-    const href = url ? ` href="${url}" target="_blank" rel="noopener"` : '';
-    return `<${tag} class="creative-card"${href}>
+  document.getElementById('creatives-grid').innerHTML = d.creatives.map(c=>`
+    <div class="creative-card" data-creative-name="${c.name}">
       <div class="creative-rank">#${c.rank}</div>
       ${c.thumb?`<img src="${c.thumb}" style="width:100%;aspect-ratio:4/5;object-fit:cover;">`
         :`<div class="creative-thumb"><div class="thumb-icon">${fi(c.format)}</div><span>${c.format}</span></div>`}
       <div class="creative-info">
-        <div class="creative-name">${c.name}${url?' <span style="font-size:9px;opacity:.5;">↗</span>':''}</div>
+        <div class="creative-name">${c.name}</div>
         <div style="margin-bottom:7px;"><span class="pillar-tag ${c.pill}">${c.pillar}</span></div>
         <div class="creative-metrics">
           <div class="creative-metric"><div class="cm-label">ROAS</div><div class="cm-value ${rc(c.roas)}">${c.roas}x</div></div>
@@ -502,8 +499,10 @@ function render(d) {
           <div class="creative-metric"><div class="cm-label">CVR</div><div class="cm-value">${c.cvr}</div></div>
         </div>
       </div>
-    </${tag}>`;
-  }).join('');
+    </div>`).join('');
+
+  // Async: look up ClickUp links for creatives
+  linkCreativesToClickUp(d.creatives.map(c => c.name));
 
   document.getElementById('reco-grid').innerHTML = d.recommendations.map(r=>`
     <div class="reco-card">
@@ -550,6 +549,36 @@ function setTheme(mode) {
   const saved = localStorage.getItem('np-theme') || 'light';
   setTheme(saved);
 })();
+
+// CLICKUP CREATIVE LINKING
+async function linkCreativesToClickUp(names) {
+  try {
+    const res = await fetch('/api/lookup-creatives', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ names })
+    });
+    if (!res.ok) return;
+    const map = await res.json();
+    document.querySelectorAll('.creative-card[data-creative-name]').forEach(card => {
+      const name = card.getAttribute('data-creative-name');
+      const match = map[name];
+      if (match && match.clickupUrl) {
+        const link = document.createElement('a');
+        link.href = match.clickupUrl;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.className = 'creative-card';
+        link.setAttribute('data-creative-name', name);
+        link.innerHTML = card.innerHTML;
+        // Add link indicator
+        const nameEl = link.querySelector('.creative-name');
+        if (nameEl) nameEl.innerHTML += ' <span style="font-size:9px;opacity:.5;">↗</span>';
+        card.replaceWith(link);
+      }
+    });
+  } catch(e) { console.log('ClickUp link lookup skipped:', e); }
+}
 
 // SCHEDULE SETTINGS
 async function loadSettings() {
