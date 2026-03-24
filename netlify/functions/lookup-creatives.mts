@@ -30,16 +30,28 @@ export default async (req: Request, context: Context) => {
 
     const data = await res.json() as { tasks: Array<{ id: string; name: string; url: string }> };
 
-    // Build a name → {id, url} map (case-insensitive)
-    const taskMap = new Map<string, { id: string; url: string }>();
-    for (const task of data.tasks) {
-      taskMap.set(task.name.toLowerCase().trim(), { id: task.id, url: task.url });
+    // Build tasks array for fuzzy matching
+    const tasks = data.tasks.map(t => ({ id: t.id, name: t.name.toLowerCase().trim() }));
+
+    // Fuzzy match: exact → creative name in task name → task name in creative name
+    function findMatch(creativeName: string) {
+      const needle = creativeName.toLowerCase().trim();
+      // 1. Exact match
+      let match = tasks.find(t => t.name === needle);
+      if (match) return match;
+      // 2. Creative name is contained within task name
+      match = tasks.find(t => t.name.includes(needle));
+      if (match) return match;
+      // 3. Task name is contained within creative name
+      match = tasks.find(t => needle.includes(t.name));
+      if (match) return match;
+      return null;
     }
 
     // Match requested names
     const results: Record<string, { clickupId: string; clickupUrl: string } | null> = {};
     for (const name of names) {
-      const match = taskMap.get(name.toLowerCase().trim());
+      const match = findMatch(name);
       results[name] = match ? { clickupId: match.id, clickupUrl: `clickup://t/${match.id}` } : null;
     }
 
