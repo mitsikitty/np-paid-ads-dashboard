@@ -265,6 +265,26 @@ export default async (req: Request) => {
         p.roas = p.spend > 0 ? (p.revenue / p.spend).toFixed(2) : "0";
       }
 
+      // Parse ads by pillar for 14d and 30d
+      const buildPillarRoas = (adsData: any[]) => {
+        const map: Record<string, { spend: number; revenue: number }> = {};
+        for (const ad of adsData) {
+          const pillar = parsePillar(ad.ad_name || "");
+          const adSpend = parseFloat(ad.spend || "0");
+          const adRevenue = extractValue(ad.action_values, "purchase");
+          if (!map[pillar]) map[pillar] = { spend: 0, revenue: 0 };
+          map[pillar].spend += adSpend;
+          map[pillar].revenue += adRevenue;
+        }
+        const result: Record<string, number> = {};
+        for (const [name, data] of Object.entries(map)) {
+          result[name] = data.spend > 0 ? parseFloat((data.revenue / data.spend).toFixed(2)) : 0;
+        }
+        return result;
+      };
+      const pillarRoas14 = buildPillarRoas(adInsights14d?.data || []);
+      const pillarRoas30 = buildPillarRoas(adInsights30d?.data || []);
+
       // Top 6 creatives by ROAS
       const top6 = ads7d
         .map((ad: any) => {
@@ -349,8 +369,8 @@ Please provide your full analysis and recommendations.`;
           name,
           pill: `pill-${name.toLowerCase()}`,
           roas7: parseFloat(data.roas),
-          roas14: 0, // TODO: calculate from 14d data
-          roas30: 0, // TODO: calculate from 30d data
+          roas14: pillarRoas14[name] || 0,
+          roas30: pillarRoas30[name] || 0,
         })),
         creatives: top6.map((c: any, i: number) => ({
           rank: i + 1,
